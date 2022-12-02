@@ -13,6 +13,10 @@ import torch
 
 import numpy as np
 from datasets import load_metric
+from torchvision import transforms
+import torchvision.transforms.functional as TF
+import random
+
 
 from collections import Counter
 MODEL_NAME = "google/vit-base-patch16-224-in21k"
@@ -20,6 +24,42 @@ MODEL_NAME = "google/vit-base-patch16-224-in21k"
 
 metric = load_metric("accuracy")
 
+
+def image_to_inputs(image: Image, size = (224,224), image_mean = (0.5, 0.5, 0.5), image_std =(0.5, 0.5, 0.5)):
+    if not isinstance(image, torch.Tensor):
+        image = TF.to_tensor(image)[0, ...]
+
+
+    resized = TF.resize(image[None, ...], size=size)[0]
+    tensor_3_channels = torch.stack([resized,resized,resized],0)
+    normalized = TF.normalize(tensor_3_channels, image_mean, image_std)
+    return  normalized
+
+
+def image_to_augmented_inputs(image, pixel_noise = 0.25):
+    if not isinstance(image, torch.Tensor):
+        image = TF.to_tensor(image)[0, ...]
+
+    less_contrast = get_contrast_adjuster()(image[None, ...])
+    added_noise= add_noise(pixel_noise)(less_contrast)
+    augmented_image = added_noise[0, ...]
+    inputs_to_network = image_to_inputs(augmented_image)
+    return augmented_image, inputs_to_network
+    
+
+def add_noise(noise):
+    def add_noise_to_image(img):
+        std = np.abs(np.random.uniform(0, noise))
+        return torch.min(img + torch.max(torch.randn(img.size()), torch.tensor(0.0)) * std, torch.tensor(1.0))
+
+    return add_noise_to_image
+
+def get_contrast_adjuster():
+
+    def adjust_contrast(image):
+        factor = 1 - np.random.uniform(0, 0.85)
+        return TF.adjust_contrast(image, contrast_factor=factor)
+    return adjust_contrast
 
 def compute_metrics(p):
     return metric.compute(
@@ -40,7 +80,11 @@ def show_examples(ds, seed: int = 1234, examples_per_class: int = 3, size=(350, 
 
     w, h = size
     labels = ds["train"].features["labels"].names
-    grid = Image.new("RGB", size=(examples_per_class * w, len(labels) * h))
+    grid_original = Image.new("RGB", size=(examples_per_class * w, len(labels) * h))
+    grid_original_input = Image.new("RGB", size=(examples_per_class * w, len(labels) * h))
+
+    grid_augmented_input = Image.new("RGB", size=(examples_per_class * w, len(labels) * h))
+    grid_augmented = Image.new("RGB", size=(examples_per_class * w, len(labels) * h))
     for label_id, _ in enumerate(labels):
 
         # Filter the dataset by a single label, shuffle it, and grab a few samples
@@ -53,11 +97,26 @@ def show_examples(ds, seed: int = 1234, examples_per_class: int = 3, size=(350, 
 
         # Plot this label's examples along a row
         for i, example in enumerate(ds_slice):
-            image = example["image"]
+
+            orignal_image = example['image']
+            original_image_inputs = TF.to_pil_image(image_to_inputs(example['image']))
+            augmented_, augmented_inputs_ = image_to_augmented_inputs(example['image'])
+            augmented, augmented_inputs = TF.to_pil_image(augmented_), TF.to_pil_image(augmented_inputs_) 
             idx = examples_per_class * label_id + i
             box = (idx % examples_per_class * w, idx // examples_per_class * h)
-            grid.paste(image.resize(size), box=box)
-    grid.show()
+
+
+            grid_original.paste(orignal_image.resize(size), box=box)
+            grid_original_input.paste(original_image_inputs.resize(size), box=box)
+
+            grid_augmented.paste(augmented.resize(size), box=box)
+            grid_augmented_input.paste(augmented_inputs.resize(size), box=box)
+
+            
+    grid_original.show()
+    grid_original_input.show()
+    grid_augmented.show()
+    grid_augmented_input.show()
 
 
 def gray_to_rgb(image: np.ndarray) -> np.ndarray:
@@ -142,7 +201,7 @@ def main():
 
     show_examples(ds, seed=random.randint(0, 1337), examples_per_class=3)
     feature_extractor = ViTFeatureExtractor.from_pretrained(MODEL_NAME)
-
+    print(feature_extractor)
     prepared_dataset = get_prepared_dataset(ds, feature_extractor)
 
     # assure that the dataset is prepared correclty
