@@ -176,13 +176,13 @@ def _training_args():
         output_dir="./vit-base-mnist-regular",
         per_device_train_batch_size=16,
         evaluation_strategy="steps",
-        num_train_epochs=1, 
+        num_train_epochs=2, 
         fp16=False,
-        save_steps=100,
-        eval_steps=100,
+        save_steps=1000,
+        eval_steps=1000,
         logging_steps=10,
         learning_rate=2e-4,
-        save_total_limit=2,
+        save_total_limit=1,
         remove_unused_columns=False,
         push_to_hub=False,
         report_to="tensorboard",
@@ -204,12 +204,9 @@ def _trainer(model, training_args, feature_extractor, train, val):
 
 def load_dataset():
 
-    train, val, test = datasets.load_dataset("mnist", split=['train[:1%]' , 'test[:5%]', 'test[5%:10%]'])
+    train, val, test = datasets.load_dataset("mnist", split=['train' , 'test[:40%]', 'test[40%:100%]'])
 
     ds = datasets.DatasetDict(train=train, val=val, test=test, ).rename_column("label", "labels") 
-
-    print('test', Counter(ds['test']['labels']))
-    print('train', Counter(ds['train']['labels']))
 
     return ds
 
