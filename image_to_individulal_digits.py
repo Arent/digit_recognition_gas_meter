@@ -3,127 +3,99 @@ import numpy as np
 from scipy import ndimage
 import matplotlib.pyplot as plt
 import copy
-from PIL import Image
+from PIL import Image, ImageDraw, ImageTransform, ImageOps
 
-import PIL
 import torch
-from transformers import  AutoModelForImageClassification
+from transformers import AutoModelForImageClassification
 from fine_tune_image_net import image_to_inputs
 
 PATH_TO_IMAGE = "meterkast_data/input.jpg"
 MODEL_NAME = "farleyknight-org-username/vit-base-mnist"
 MODEL_NAME = "/Users/arentstienstra/Documents/digits/vit-base-mnist-regular"
+POINTS = [ (272, 1250), (199,1488), (1616, 1634),(1607, 1417),]
 
+def crop_and_straigthen(image : Image, corners: list[tuple[int, int]] ):
+    left_top, left_botton, right_bottom, right_top = corners
+    desired_dimensions = (*left_top, *left_botton, *right_bottom, * right_top)
 
-def split_individual_digets(cropped_image: np.ndarray) -> list[np.ndarray]:
-    digit_width = 218
-    number_of_digets = 7
-    space_between_digits = 0
+    # TODO Do something about the space between digits. 
+    return image.transform(
+        (7*(28), 28),
+        Image.Transform.QUAD,
+        data=desired_dimensions,
+        resample=Image.Resampling.BILINEAR,
+    )
 
+def split_into_individual_digits(cropped_and_straightened: Image, num_digits: int = 7):
+    cropped_and_straightened_array = np.array(cropped_and_straightened)
+    per_digit_width = int(cropped_and_straightened.size[0] / num_digits)
     digits = []
-    for i in range(number_of_digets -1 ):
-        start_digit =  (digit_width + space_between_digits) * i
-        end_digit = start_digit + digit_width
-        digits.append( cropped_image[:, start_digit:end_digit])
-
-    # Very hacky. Due to the angle, the digit width isn't constant. 
-    # It's only visible for the last digit so this hack is needed
-    
-    start_last_diget =  (digit_width + space_between_digits) * 6 - 80
-    end_last_diget =  start_last_diget + digit_width
-    digits.append( cropped_image[:, start_last_diget:end_last_diget])
+    for i_digit in range(num_digits):
+        start = i_digit  * per_digit_width
+        end = start + per_digit_width
+        digit_array = cropped_and_straightened_array[:, start:end]
+        digits.append(Image.fromarray(digit_array))
 
     return digits
 
-def get_relevant_area(image: np.ndarray,) -> np.ndarray:
-    xstart, xend = 1225, 1675
-    ystart, yend = 200, 1680
-    angle = 8
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    cropped = gray[xstart:xend, ystart:yend]
-    rotated =  ndimage.rotate(cropped, angle, reshape=False, mode='nearest')
-
-    cropped_again =  rotated[90:340, :]   
-    return cropped_again
-
 def normalize(image):
     copied = copy.deepcopy(image)
-    norm =  (copied - np.min(copied)) / (np.max(copied) - np.min(copied))
+    norm = (copied - np.min(copied)) / (np.max(copied) - np.min(copied))
     norm_im = norm * 255
 
     return norm_im.astype(np.uint8)
 
-def plot_results(original_image, cropped_image: np.ndarray, padded, digit_images: list[np.ndarray], predictions:list[int]) -> None:
 
+def plot_results(
+    original_image,
+    cropped_image: np.ndarray,
+    padded,
+    digit_images: list[np.ndarray],
+    predictions: list[int],
+) -> None:
 
     assert len(digit_images) == 7
 
-    row_original = ['original'] * 7
+    row_original = ["original"] * 7
 
-
-    row_cropped = ['cropped'] * 7
-    row_digits = list('0123456')
+    row_cropped = ["cropped"] * 7
+    row_digits = list("0123456")
     row_digits_raw = [f"p{i}" for i in range(7)]
 
-
-    all_axis = [ row_original,row_original, row_original, row_original, row_cropped, row_digits_raw, row_digits]
-
+    all_axis = [
+        row_original,
+        row_original,
+        row_original,
+        row_original,
+        row_cropped,
+        row_digits_raw,
+        row_digits,
+    ]
 
     fig = plt.figure(constrained_layout=True)
     ax_dict = fig.subplot_mosaic(all_axis)
-    
-    ax_dict["original"].imshow(original_image,)
-    ax_dict["cropped"].imshow(cropped_image, 'gray')
-    ax_dict["cropped"].axis('off')
-    ax_dict["original"].axis('off')
+
+    ax_dict["original"].imshow(
+        original_image,
+    )
+    ax_dict["cropped"].imshow(cropped_image, "gray")
+    ax_dict["cropped"].axis("off")
+    ax_dict["original"].axis("off")
 
     for name, digit, pred in zip(row_digits, digit_images, predictions):
-        ax_dict[name].imshow(digit, 'gray', vmin=0, vmax=255)
-        ax_dict[name].axis('off')
+        ax_dict[name].imshow(digit, "gray")
+        ax_dict[name].axis("off")
         ax_dict[name].set_title(f"Pred: {pred}")
 
-
     for name, digit in zip(row_digits_raw, padded):
-        ax_dict[name].imshow(digit, 'gray', vmin=0, vmax=255)
-        ax_dict[name].axis('off')
+        ax_dict[name].imshow(digit, "gray")
+        ax_dict[name].axis("off")
 
     plt.show()
 
 
-def diff_to_tuple(diff: int) -> tuple[int, int]:
-    if diff % 2 == 0: 
-        return int(diff/2), int(diff/2)
-    
-    lower = int((diff - 1)/2)
-    higher = int((diff + 1)/2)
-    return lower,higher
-
-def make_square(image):
-
-    desired_shape = 28
-    x_diff = desired_shape - image.shape[0]
-    y_diff = desired_shape - image.shape[1]
-
-    
-    value = image.mean()
-    return np.pad(image, (diff_to_tuple(x_diff), diff_to_tuple(y_diff) ), mode='constant', constant_values=((value,value), (value,value)))
-
-def downsample(image):
-    return ndimage.interpolation.zoom(image,.1) #decimate resolution
-    
 def invert_image(image):
-    inverted = 255 - image
-
-
-    image_pil = Image.fromarray(inverted)
-    new_image = PIL.ImageEnhance.Contrast(image_pil).enhance(2.5)
-    # new_image = PIL.ImageEnhance.Brightness(new_image).enhance(0.9)
-
-    arr = np.array(new_image)
-
-    arr[arr < 100] = 0
-    return  inverted
-
+    return  255 - normalize(image)
 
 def predict(images) -> list[int]:
     model = AutoModelForImageClassification.from_pretrained(MODEL_NAME)
@@ -138,21 +110,23 @@ def predict(images) -> list[int]:
         predictions.append(predicted_label)
     return predictions
 
+
 def main():
 
     image = cv2.imread(PATH_TO_IMAGE)
-    aoi = get_relevant_area(image)
-    digits = split_individual_digets(aoi)
-    digit_normalized = [normalize(d) for d in digits]
-
-    downsampled = [downsample(d) for d in digit_normalized]
-
-    padded = [make_square(i) for i in downsampled ]
-    inverted = [invert_image(p) for p in padded]
+   
+    original_image = Image.fromarray(image)
+   
+    area_of_interest = crop_and_straigthen(original_image, POINTS)
+    digits = split_into_individual_digits(area_of_interest, 7)
+    gray_digits = [ImageOps.grayscale(digit) for digit in digits]
+    
+    digit_arrays = [np.array(d) for d in gray_digits]
+    print(digit_arrays[0].shape)
+    inverted = [invert_image(p) for p in digit_arrays]
 
     predictions = predict(inverted)
-    plot_results(image, aoi, padded, inverted, predictions)
+    plot_results(image, np.array(area_of_interest), digit_arrays, inverted, predictions)
 
-    
-    
+
 main()
