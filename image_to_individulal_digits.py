@@ -7,12 +7,12 @@ from PIL import Image
 
 import PIL
 import torch
-from transformers import AutoFeatureExtractor, AutoModelForImageClassification
+from transformers import  AutoModelForImageClassification
+from fine_tune_image_net import image_to_inputs
 
-
-PATH_TO_IMAGE = "input.jpg"
+PATH_TO_IMAGE = "meterkast_data/input.jpg"
 MODEL_NAME = "farleyknight-org-username/vit-base-mnist"
-MODEL_NAME = "Karelito00/beit-base-patch16-224-pt22k-ft22k-finetuned-mnist"
+MODEL_NAME = "/Users/arentstienstra/Documents/digits/vit-base-mnist-regular"
 
 
 def split_individual_digets(cropped_image: np.ndarray) -> list[np.ndarray]:
@@ -37,9 +37,8 @@ def split_individual_digets(cropped_image: np.ndarray) -> list[np.ndarray]:
 
 def get_relevant_area(image: np.ndarray,) -> np.ndarray:
     xstart, xend = 1225, 1675
-    ystart, yend = 200, 1620
+    ystart, yend = 200, 1680
     angle = 8
-
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     cropped = gray[xstart:xend, ystart:yend]
     rotated =  ndimage.rotate(cropped, angle, reshape=False, mode='nearest')
@@ -106,7 +105,7 @@ def make_square(image):
     y_diff = desired_shape - image.shape[1]
 
     
-    value = image.max()
+    value = image.mean()
     return np.pad(image, (diff_to_tuple(x_diff), diff_to_tuple(y_diff) ), mode='constant', constant_values=((value,value), (value,value)))
 
 def downsample(image):
@@ -123,28 +122,24 @@ def invert_image(image):
     arr = np.array(new_image)
 
     arr[arr < 100] = 0
-    return  arr
+    return  inverted
 
 
 def predict(images) -> list[int]:
     model = AutoModelForImageClassification.from_pretrained(MODEL_NAME)
-    extractor = AutoFeatureExtractor.from_pretrained(MODEL_NAME)
     predictions = []
     for d in images:
         d_color = np.repeat(d[..., np.newaxis], 3, axis=2)
         d_pil = Image.fromarray(d_color)
-
-        inputs = extractor(d_pil, return_tensors="pt")
+        inputs = image_to_inputs(d_pil)
         with torch.no_grad():
-            logits = model(**inputs).logits
+            logits = model(inputs[None, ...]).logits
         predicted_label = logits.argmax(-1).item()
         predictions.append(predicted_label)
     return predictions
 
 def main():
 
-    
-   
     image = cv2.imread(PATH_TO_IMAGE)
     aoi = get_relevant_area(image)
     digits = split_individual_digets(aoi)
@@ -154,6 +149,7 @@ def main():
 
     padded = [make_square(i) for i in downsampled ]
     inverted = [invert_image(p) for p in padded]
+
     predictions = predict(inverted)
     plot_results(image, aoi, padded, inverted, predictions)
 
