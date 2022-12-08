@@ -1,12 +1,12 @@
-import numpy as np
-import matplotlib.pyplot as plt
 import copy
-from PIL import Image, ImageOps
-from matplotlib.widgets import PolygonSelector
-from matplotlib.widgets import Button, Slider
 
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
+from matplotlib.widgets import Button, PolygonSelector, Slider
+from PIL import Image, ImageOps
 from transformers import AutoModelForImageClassification
+
 from fine_tune_image_net import image_to_inputs
 
 PATH_TO_IMAGE = "meterkast_data/new_pose.jpg"
@@ -14,28 +14,13 @@ MODEL_NAME = "farleyknight-org-username/vit-base-mnist"
 MODEL_NAME = "/Users/arentstienstra/Documents/digits/vit-base-mnist-regular"
 
 
-INITIAL_POINTS =  [(2110, 1419), (2021, 1190), (1148, 1550), (1203, 1787),]
+INITIAL_POINTS = [
+    (2110, 1419),
+    (2021, 1190),
+    (1148, 1550),
+    (1203, 1787),
+]
 INITIAL_PERCENTAGE = 0.05
-
-def calibrate2(im):
-    # To create the polygon programmatically
-    fig, ax = plt.subplots()
-    plt.imshow(im)
-
-    selector = PolygonSelector(ax, lambda *args: None)
-
-    # Add three vertices
-    selector.verts = INITIAL_POINTS
-
-    plt.show()
-
-    points = [(int(x), int(y)) for x,y in selector.verts ]
-
-    points_right_order  = [points[i] for i in [2,3,0,1]]
-
-    print("Selected points", points_right_order)
-    return points_right_order
-
 
 
 def crop_and_straigthen(image: Image, corners: list[tuple[int, int]]):
@@ -81,57 +66,13 @@ def normalize(image):
     return norm_im.astype(np.uint8)
 
 
-def plot_results(
-    original_image,
-    cropped_image: np.ndarray,
-    digit_images: list[np.ndarray],
-    predictions: list[int],
-) -> None:
-
-    assert len(digit_images) == 7
-
-    row_original = ["original"] * 7
-
-    row_cropped = ["cropped"] * 7
-    row_digits = list("0123456")
-
-    all_axis = [
-        row_original,
-        row_original,
-        row_original,
-        row_original,
-        row_cropped,
-        row_digits,
-    ]
-
-    fig = plt.figure(constrained_layout=True)
-    ax_dict = fig.subplot_mosaic(all_axis)
+def plot(
+    ax_dict, original_image, area_of_interest, predictions, digit_arrays, row_digits
+):
 
     ax_dict["original"].imshow(
         original_image,
     )
-    ax_dict["cropped"].imshow(cropped_image, "gray")
-    ax_dict["cropped"].axis("off")
-    ax_dict["original"].axis("off")
-
-    for name, digit, pred in zip(row_digits, digit_images, predictions):
-        ax_dict[name].imshow(digit, "gray")
-        ax_dict[name].axis("off")
-        ax_dict[name].set_title(f"Pred: {pred}")
-
-
-    plt.show()
-
-
-
-def plot(ax_dict,original_image, area_of_interest, predictions, digit_arrays, row_digits):
-
-    ax_dict["original"].imshow(
-        original_image,
-    )
-
-
-
     ax_dict["cropped"].imshow(area_of_interest, "gray")
     ax_dict["cropped"].axis("off")
     ax_dict["original"].axis("off")
@@ -141,7 +82,8 @@ def plot(ax_dict,original_image, area_of_interest, predictions, digit_arrays, ro
         ax_dict[name].axis("off")
         ax_dict[name].set_title(f"Pred: {pred}")
 
-def plot_results_2(
+
+def plot_results(
     original_image,
 ) -> None:
 
@@ -149,7 +91,7 @@ def plot_results_2(
 
     row_cropped = ["cropped"] * 7
     row_digits = list("0123456")
-    row_button = ['button', 'button'] + ['nothing', 'nothing']+ ['slider'] * 3
+    row_button = ["button", "button"] + ["nothing", "nothing"] + ["slider"] * 3
 
     all_axis = [
         row_original,
@@ -158,7 +100,7 @@ def plot_results_2(
         row_original,
         row_cropped,
         row_digits,
-        row_button
+        row_button,
     ]
 
     fig = plt.figure(constrained_layout=True)
@@ -167,13 +109,13 @@ def plot_results_2(
     selector = PolygonSelector(ax_dict["original"], lambda *args: None)
 
     # Add three vertices
-    ax_dict['nothing'].axis("off")
+    ax_dict["nothing"].axis("off")
     selector.verts = INITIAL_POINTS
-    bprev = Button(ax_dict["button"], 'REPREDICT')
-   
+    bprev = Button(ax_dict["button"], "REPREDICT")
+
     freq_slider = Slider(
-        ax=ax_dict['slider'],
-        label='Percentage gap',
+        ax=ax_dict["slider"],
+        label="Percentage gap",
         valmin=0.0,
         valmax=1.0,
         valinit=INITIAL_PERCENTAGE,
@@ -181,13 +123,22 @@ def plot_results_2(
 
     def repredict(event):
         print("Repredicting .... ")
-        points = [(int(x), int(y)) for x,y in selector.verts ]
-        points_right_order  = [points[i] for i in [2,3,0,1]]
-        area_of_interest, digit_arrays = input_to_individual_and_processed_images(original_image, points_right_order, percentage_space=freq_slider.val)
+        points = [(int(x), int(y)) for x, y in selector.verts]
+        points_right_order = [points[i] for i in [2, 3, 0, 1]]
+        area_of_interest, digit_arrays = input_to_individual_and_processed_images(
+            original_image, points_right_order, percentage_space=freq_slider.val
+        )
         predictions = predict(digit_arrays)
-        plot(ax_dict,original_image,area_of_interest,predictions,digit_arrays,row_digits)
+        plot(
+            ax_dict,
+            original_image,
+            area_of_interest,
+            predictions,
+            digit_arrays,
+            row_digits,
+        )
         print("Done :)")
-    
+
     bprev.on_clicked(repredict)
     repredict(None)
 
@@ -198,10 +149,13 @@ def invert_image(image):
     return 255 - normalize(image)
 
 
-
-def input_to_individual_and_processed_images(original_image: Image, points: list[tuple[int, int]], percentage_space: float) -> list[np.ndarray]:
+def input_to_individual_and_processed_images(
+    original_image: Image, points: list[tuple[int, int]], percentage_space: float
+) -> list[np.ndarray]:
     area_of_interest = crop_and_straigthen(original_image, points)
-    individual_digits = split_into_individual_digits(area_of_interest, 7, percentage_space)
+    individual_digits = split_into_individual_digits(
+        area_of_interest, 7, percentage_space
+    )
     digits = [
         im.resize((28, 28), resample=Image.Resampling.BILINEAR)
         for im in individual_digits
@@ -210,7 +164,6 @@ def input_to_individual_and_processed_images(original_image: Image, points: list
 
     digit_arrays = [np.array(d) for d in gray_digits]
     return area_of_interest, [invert_image(p) for p in digit_arrays]
-
 
 
 def predict(images) -> list[int]:
@@ -228,21 +181,8 @@ def predict(images) -> list[int]:
 
 
 def main():
-
     original_image = Image.open(PATH_TO_IMAGE)
-    plot_results_2(original_image)
-    # points = calibrate2(original_image)
-    
-    
-    # area_of_interest, inverted = input_to_individual_and_processed_images(original_image, points)
-    # # predictions = predict(inverted)
-    
-    # plot_results(
-    #     np.array(original_image),
-    #     np.array(area_of_interest),
-    #     inverted,
-    #     predictions,
-    # )
+    plot_results(original_image)
 
 
 main()
