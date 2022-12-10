@@ -8,7 +8,7 @@ from PIL import Image
 from stadswarmte_sensor.app_settings import CameraSettings
 
 
-def capture_image(settings: CameraSettings) -> Image:
+def capture_image(settings: CameraSettings, filename: str) -> Image:
     print(f"Starting to capture with settings {settings!r}")
     # Force sensor mode 3 (the long exposure mode)
     framerate = Fraction(1, int(settings.shutter_speed_seconds) + 1)
@@ -28,8 +28,8 @@ def capture_image(settings: CameraSettings) -> Image:
         # to mode switching on the still port, this will take
         # longer than the set exposure seconds
 
-        with tempfile.NamedTemporaryFile(suffix='.png') as tmp:
-            camera.capture(tmp, quality=100)
-            image = Image.open(tmp)
+    camera.capture(filename, quality=100)
+    image = Image.open(filename)
+
     print("Captured image.")
     return image
