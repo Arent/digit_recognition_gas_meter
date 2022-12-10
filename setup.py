@@ -133,7 +133,6 @@ setup(
         "tensorboard-data-server==0.6.1",
         "tensorboard-plugin-wit==1.8.1",
         "tensorflow-estimator==2.10.0",
-        "tensorflow-macos==2.10.0",
         "termcolor==2.1.1",
         "terminado==0.17.0",
         "threadpoolctl==3.1.0",
