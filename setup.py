@@ -139,8 +139,8 @@ setup(
         "tinycss2==1.2.1",
         "tokenizers==0.13.2",
         "tomli==2.0.1",
-        "torch==1.13.0",
-        "torchvision==0.14.0",
+        # "torch==1.13.0",
+        # "torchvision==0.14.0",
         "tornado==6.2",
         "tqdm==4.64.1",
         "traitlets==5.5.0",
@@ -157,6 +157,9 @@ setup(
         "yarl==1.8.1",
     ],
     entry_points={
-        'console_scripts': ['run_meterkast_sensor=stadswarmte_sensor.main:main']
-    }
+        "console_scripts": [
+            "run_meterkast_sensor=stadswarmte_sensor.main:main",
+            "just_take_images=stadswarmte_sensor.main:just_log",
+        ]
+    },
 )
