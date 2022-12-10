@@ -124,8 +124,6 @@ setup(
         "requests-oauthlib==1.3.1",
         "responses==0.18.0",
         "rsa==4.9",
-        "scikit-learn==1.1.3",
-        "scipy==1.9.3",
         "Send2Trash==1.8.0",
         "six==1.16.0",
         "sniffio==1.3.0",
