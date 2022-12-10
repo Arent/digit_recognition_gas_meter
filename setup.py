@@ -106,7 +106,7 @@ setup(
         "psutil==5.9.4",
         "ptyprocess==0.7.0",
         "pure-eval==0.2.2",
-        "pyarrow==10.0.1",
+        # "pyarrow==10.0.1",
         "pyasn1==0.4.8",
         "pyasn1-modules==0.2.8",
         "pycparser==2.21",
