@@ -159,7 +159,7 @@ setup(
     entry_points={
         "console_scripts": [
             "run_meterkast_sensor=stadswarmte_sensor.main:main",
-            "just_take_images=stadswarmte_sensor.main:just_log",
+            "just_take_images=stadswarmte_sensor.just_take_images:main",
         ]
     },
 )

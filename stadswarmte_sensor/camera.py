@@ -28,7 +28,7 @@ def capture_image(settings: CameraSettings) -> Image:
         # to mode switching on the still port, this will take
         # longer than the set exposure seconds
 
-        with tempfile.NamedTemporaryFile() as tmp:
+        with tempfile.NamedTemporaryFile(suffix='.png') as tmp:
             camera.capture(tmp, quality=100)
             image = Image.open(tmp)
     print("Captured image.")
