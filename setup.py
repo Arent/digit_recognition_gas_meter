@@ -4,7 +4,11 @@ setup(
     name="stadswarmte_sensor",
     version="0.1.0",
     packages=find_packages(include=["meterkast_data", "meterkast_data.*"]),
-    install_requires=[],  # Just install your packages yourself
+    install_requires=[
+        "torch > 1.13",
+        "torchvision > 0.14",
+        "transformers > 4.24"
+    ],  # Just install your packages yourself
     entry_points={
         "console_scripts": [
             "run_meterkast_sensor=stadswarmte_sensor.main:main",
