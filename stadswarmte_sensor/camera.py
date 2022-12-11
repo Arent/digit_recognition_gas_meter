@@ -1,4 +1,5 @@
 import time
+
 from picamera2 import Picamera2
 from PIL import Image
 
