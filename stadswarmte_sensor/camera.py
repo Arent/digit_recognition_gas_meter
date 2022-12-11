@@ -28,7 +28,7 @@ def capture_image(settings: CameraSettings, filename: str) -> Image:
         # to mode switching on the still port, this will take
         # longer than the set exposure seconds
 
-    camera.capture(filename, quality=100)
+        camera.capture(filename, quality=100)
     image = Image.open(filename)
 
     print("Captured image.")
