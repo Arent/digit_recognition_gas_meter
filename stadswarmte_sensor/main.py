@@ -15,13 +15,6 @@ def log_to_disk(
     image.save(base_path / name)
 
 
-def only_log_to_disk(settings: app_settings.AppSettings) -> None:
-    timestamp = datetime.datetime.utcnow().strftime("%Y_%m_%d_%H_%M_%S")
-    image = camera.capture_image(settings.camera_settings)
-    name = f"{timestamp}__no_prediction.png"
-    image.save(settings.images_folder / name)
-
-
 def capture_recognise_and_publish(settings: app_settings.AppSettings):
     """This funcion captures an image, recognizes the individual digits
     and publishes a message on a MQQT topic.
@@ -32,19 +25,14 @@ def capture_recognise_and_publish(settings: app_settings.AppSettings):
 
     timestamp = datetime.datetime.utcnow().strftime("%Y_%m_%d_%H_%M_%S")
 
-    image = camera.capture_image(settings.camera_settings)
+    image = camera.capture_image(
+        settings.camera_settings, settings.images_folder / "input.png"
+    )
     digits = image_to_digits.to_individual_digits(
         image, settings.digit_recognition_settings
     )
     log_to_disk(image, digits, timestamp, settings.images_folder)
     mqqt.publish_message(digits, timestamp, settings.mqqt_settings)
-
-
-def just_log():
-    settings = app_settings.AppSettings()
-    while True:
-        only_log_to_disk(settings)
-        time.sleep(settings.time_between_measurements)
 
 
 def main():
