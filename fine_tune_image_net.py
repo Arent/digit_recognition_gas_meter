@@ -1,24 +1,16 @@
 import functools
-import datasets
 import random
-from PIL import Image
-from transformers import (
-    ViTFeatureExtractor,
-    ViTForImageClassification,
-    TrainingArguments,
-    Trainer,
-)
+from collections import Counter
+
+import datasets
 import numpy as np
 import torch
-
-import numpy as np
-from datasets import load_metric
-from torchvision import transforms
 import torchvision.transforms.functional as TF
-import random
-
-
-from collections import Counter
+from datasets import load_metric
+from PIL import Image
+from torchvision import transforms
+from transformers import (Trainer, TrainingArguments, ViTFeatureExtractor,
+                          ViTForImageClassification)
 
 MODEL_NAME = "google/vit-base-patch16-224-in21k"
 

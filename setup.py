@@ -1,11 +1,10 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
     name="stadswarmte_sensor",
     version="0.1.0",
     packages=find_packages(include=["meterkast_data", "meterkast_data.*"]),
-    install_requires=[] # Just install your packages yourself
-        
+    install_requires=[],  # Just install your packages yourself
     entry_points={
         "console_scripts": [
             "run_meterkast_sensor=stadswarmte_sensor.main:main",
