@@ -18,10 +18,7 @@ class DigitRecognitionSettings:
         (2057, 1292),
     )
 
-    model_location: Path = Path("/home/pi/models/vit-base-mnist-regular")
-    # model_location: Path = Path(
-    #     "/Users/arentstienstra/Documents/digits/vit-base-mnist-regular"
-    # )
+    model_location: Path = Path("~/models/vit-base-mnist-regular").expanduser()
 
     def __post_init__(self):
         assert len(self.corner_points) == 4, "There should be 4 corner locations"
