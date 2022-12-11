@@ -4,8 +4,8 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class CameraSettings:
-    shutter_speed_seconds: float = 1.0
-    iso: int = 200
+    shutter_speed_seconds: int = 1
+    gain: float = 1.5
 
 
 @dataclass(frozen=True)

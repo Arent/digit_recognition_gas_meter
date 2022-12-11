@@ -1,35 +1,24 @@
-import tempfile
-from fractions import Fraction
-from time import sleep
-
-from picamera import PiCamera
 from PIL import Image
-
+import time
+from picamera2 import Picamera2
 from stadswarmte_sensor.app_settings import CameraSettings
 
 
 def capture_image(settings: CameraSettings, filename: str) -> Image:
-    print(f"Starting to capture with settings {settings!r}")
-    # Force sensor mode 3 (the long exposure mode)
-    framerate = Fraction(1, int(settings.shutter_speed_seconds) + 1)
-    with PiCamera(
-        resolution=(2592, 1944), framerate=framerate, sensor_mode=3
-    ) as camera:
+    
 
-        camera.shutter_speed = int(settings.shutter_speed_seconds * 1_000_000)
-        camera.iso = settings.iso
+    picam2 = Picamera2()
 
-        # Give the camera a good long time to set gains and
-        # measure AWB (you may wish to use fixed AWB instead)
+    capture_config = picam2.create_still_configuration()
 
-        sleep(30)
-        camera.exposure_mode = "off"
-        # Finally, capture an image with a long exposure. Due
-        # to mode switching on the still port, this will take
-        # longer than the set exposure seconds
+    picam2.start()
+    time.sleep(2)
 
-        camera.capture(filename, quality=100)
+    controls = {"ExposureTime": settings.shutter_speed_seconds * 1_000_000,  "AnalogueGain": settings.gain}
+    capture_config2 = picam2.create_still_configuration(controls=controls)
+    picam2.switch_mode_and_capture_file(capture_config2, filename)
+
     image = Image.open(filename)
-
-    print("Captured image.")
+    picam2.close()
+    print(f"Captured image at {filename}")
     return image
