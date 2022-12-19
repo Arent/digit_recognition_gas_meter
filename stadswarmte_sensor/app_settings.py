@@ -12,10 +12,10 @@ class CameraSettings:
 class DigitRecognitionSettings:
     gap_between_digits_percentage: float = 0.01
     corner_points: tuple[tuple[int, int], ...] = (
-        (2163, 1482),
-        (2057, 1292),
-        (1191, 1697),
-        (1279, 1889),
+        (536, 1428),
+        (467, 1686),
+        (1525, 1723),
+        (1537, 1472),
     )
 
     model_location: Path = Path("~/models/vit-base-mnist-regular").expanduser()

@@ -92,7 +92,7 @@ def plot_results(
 
 def main():
     original_image = Image.open(
-        "meterkast_images/2022_12_11_18_19_20__no_prediction.jpg"
+        "meterkast_images/2022_12_18_15_40_37__no_prediction.jpg"
     )
     plot_results(original_image, app_settings.DigitRecognitionSettings())
 
