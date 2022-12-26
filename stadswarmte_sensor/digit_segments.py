@@ -1,4 +1,5 @@
 import dataclasses
+
 import numpy as np
 
 
@@ -204,15 +205,20 @@ def maximise_segments(digit: SegmentDigit, segment_images: list[np.ndarray]):
     return total
 
 
-def segment_digit_to_image(frame_shape: tuple[int, int], digit: SegmentDigit):
+def segment_digit_to_image(
+    frame_shape: tuple[int, int], digit: SegmentDigit, settings: SegmentSettings
+):
     segment_images = [
-        segment_to_template(s, frame_shape) for s in all_segments_in_frame(frame_shape)
+        segment_to_template(s, frame_shape)
+        for s in all_segments_in_frame(frame_shape, settings=settings)
     ]
     return maximise_segments(digit, segment_images)
 
 
-def all_digit_images(frame_shape: tuple[int, int]) -> list[np.ndarray]:
+def all_digit_images(
+    frame_shape: tuple[int, int], settings: SegmentSettings
+) -> list[np.ndarray]:
     images = []
     for digit in all_digits().values():
-        images.append(segment_digit_to_image(frame_shape, digit))
+        images.append(segment_digit_to_image(frame_shape, digit, settings))
     return images
