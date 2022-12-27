@@ -49,7 +49,9 @@ def plot_results(
 
     # Add three vertices
     ax_dict["nothing"].axis("off")
-    selector.verts = settings.corner_points
+
+    vertices_order = [settings.corner_points[i] for i in [2, 3, 0, 1]]
+    selector.verts = vertices_order
     bprev = Button(ax_dict["button"], "REPREDICT")
 
     freq_slider = Slider(
@@ -91,9 +93,7 @@ def plot_results(
 
 
 def main():
-    original_image = Image.open(
-        "meterkast_images/2022_12_18_15_40_37__no_prediction.jpg"
-    )
+    original_image = Image.open("2022_12_26_13_20_25__no_prediction.jpg")
     plot_results(original_image, app_settings.DigitRecognitionSettings())
 
 

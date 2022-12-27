@@ -41,10 +41,6 @@ class SegmentDigit:
     def __len__(self):
         return len(dataclasses.astuple(self))
 
-    def reversed(self) -> "SegmentDigit":
-        values = [not i for i in self]
-        return self.__class__(*values)
-
 
 def all_segments_in_frame(
     frame_shape: tuple[int, int],
@@ -189,7 +185,7 @@ def all_digits() -> dict[int, SegmentDigit]:
             center=1,
             bottom_left=0,
             bottom_right=1,
-            bottom=1,
+            bottom=0,
         ),
     }
 

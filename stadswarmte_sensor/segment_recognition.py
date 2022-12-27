@@ -20,22 +20,17 @@ def euclidian_distance(image1: np.ndarray, image2: np.ndarray) -> float:
 
 @dataclasses.dataclass(frozen=True)
 class Settings:
-    top: int = 1
-    bottom: int = 0
-    right: int = 2
-    left: int = 10
+    top: int = 2
+    bottom: int = 3
+    right: int = 3
+    left: int = 6
 
-    corner_points: tuple[tuple[int, int], ...] = (
-        (501, 1440),
-        (491, 1655),
-        (1518, 1695),
-        (1537, 1492),
-    )
+    corner_points: tuple[tuple[int, int], ...] = ((517, 1461), (474, 1696), (1547, 1764), (1567, 1523))
 
     percentage_gap: float = 0.02
-    stripe_height_percentage: float = 0.2
-    stripe_width_percentage: float = 0.3
-    gap_middle_percentage: float = 0.08
+    stripe_height_percentage: float = 0.17
+    stripe_width_percentage: float = 0.25
+    gap_middle_percentage: float = 0.10
 
 
 def normalized_digit_distances(
@@ -102,16 +97,39 @@ def plot(
         ax_dict[f"cropped_{i}"].set_title(best)
 
 
+    for i, temp in enumerate(digit_templates):
+        ax_dict[f"digit_{i}"].imshow(temp)
+
+def predict(original_image: Image, settings: Settings = Settings()) -> list[int]:
+    predictions = []
+    _, digit_arrays = image_to_digits._input_to_individual_and_processed_images(
+        original_image, settings.corner_points, percentage_space=settings.percentage_gap
+    )
+    cropped_shape = normalize_and_crop(digit_arrays[0], settings).shape
+    digit_templates = digit_segments.all_digit_images(cropped_shape, settings)
+
+    for digit_array in digit_arrays:
+        cropped = normalize_and_crop(
+            digit_array,
+            settings,
+        )
+        distances = normalized_digit_distances(cropped, digit_templates)
+        best = np.argmax(distances)
+        predictions.append(best)
+
+    return predictions
+
+
 def main():
 
     original_image = Image.open(
-        "meterkast_images/2022_12_18_15_40_37__no_prediction.jpg"
+        "ground_truth/2022_12_27_07_43_26__gt_0335959.jpg"
     )
-
+    # original_image = Image.open("ground_truth/2022_12_27_06_43_22__gt_0335948.jpg")
     all_axis = [
-        [f"original_{i}" for i in range(7)],
-        [f"cropped_{i}" for i in range(7)],
-        ["gap"]
+        [f"original_{i}" for i in range(10)],
+        [f"cropped_{i}" for i in range(10)],
+        ["gap"] * 4
         + [
             "stripe_height",
             "stripe_height",
@@ -120,6 +138,8 @@ def main():
             "middle_gap",
             "middle_gap",
         ],
+        [f"digit_{i}" for i in range(10)],
+
     ]
 
     settings = Settings()
