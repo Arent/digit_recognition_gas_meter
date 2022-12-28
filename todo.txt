@@ -1,0 +1,8 @@
+- Some preprocessing (resizing to 28*28 for example) is not needed any more. Remove it.
+- The preprocessing should be included in the segment_recognition_file
+- Unit tests are needed. Also integration tests.
+- The digit_segments is a pretty nice module. Though, I would make the public interface array only. 
+- I think I can use one single settings dataclass. Each module just defines a protocol on what they need.
+- The calibrate module is ugly, though who cares.
+- The verify quality module is quite ugly too, again I don't care much about it.
+- I need to properly install dependencies. 
