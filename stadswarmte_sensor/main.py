@@ -25,9 +25,9 @@ def capture_recognise_and_publish(settings: app_settings.AppSettings):
 
     timestamp = datetime.datetime.utcnow().strftime("%Y_%m_%d_%H_%M_%S")
 
-    image = camera.capture_image(
-        settings.camera_settings, settings.images_folder / "input.png"
-    )
+    name = f"{settings.images_folder}/{timestamp}__no_prediction.png"
+
+    image = camera.capture_image(settings.camera_settings, name)
     digits = segment_recognition.process_and_predict(
         image, settings.digit_recognition_settings
     )

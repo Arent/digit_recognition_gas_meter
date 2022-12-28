@@ -4,8 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Button, PolygonSelector, Slider
 from PIL import Image
 
-from stadswarmte_sensor import (app_settings, image_to_digits,
-                                segment_recognition)
+from stadswarmte_sensor import app_settings, image_to_digits, segment_recognition
 
 
 def plot(
