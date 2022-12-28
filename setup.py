@@ -5,7 +5,6 @@ setup(
     version="0.1.0",
     packages=find_packages(include=["meterkast_data", "meterkast_data.*"]),
     install_requires=[
-x        "transformers > 4.24"
     ],  # Just install your packages yourself
     entry_points={
         "console_scripts": [
