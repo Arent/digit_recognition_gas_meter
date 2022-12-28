@@ -5,8 +5,6 @@ from paho.mqtt import client as mqtt_client
 
 import stadswarmte_sensor.app_settings as app_settings
 
-# from stadswarmte_sensor import app_settings
-
 
 def connect_mqtt(settings: app_settings.MQTTSettings):
     def on_connect(client, userdata, flags, rc):
@@ -44,6 +42,3 @@ def publish_message(
 
     print(f"Failed to send message to topic {settings.topic}")
     return
-
-
-publish_message([3, 3, 4, 4, 1, 8], "2022_12_09__12_28_37", app_settings.MQTTSettings())

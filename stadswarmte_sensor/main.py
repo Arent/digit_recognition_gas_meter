@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from stadswarmte_sensor import app_settings, camera, image_to_digits, mqqt
+from stadswarmte_sensor import app_settings, camera, mqqt, segment_recognition
 
 
 def log_to_disk(
@@ -28,7 +28,7 @@ def capture_recognise_and_publish(settings: app_settings.AppSettings):
     image = camera.capture_image(
         settings.camera_settings, settings.images_folder / "input.png"
     )
-    digits = image_to_digits.to_individual_digits(
+    digits = segment_recognition.process_and_predict(
         image, settings.digit_recognition_settings
     )
     log_to_disk(image, digits, timestamp, settings.images_folder)

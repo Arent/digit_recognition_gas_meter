@@ -1,25 +1,7 @@
 import copy
-from pathlib import Path
 
 import numpy as np
-import torch
-import torchvision.transforms.functional as TF
 from PIL import Image, ImageOps
-from transformers import AutoModelForImageClassification
-
-from stadswarmte_sensor.app_settings import DigitRecognitionSettings
-
-
-def image_to_inputs(
-    image: Image, size=(224, 224), image_mean=(0.5, 0.5, 0.5), image_std=(0.5, 0.5, 0.5)
-):
-    if not isinstance(image, torch.Tensor):
-        image = TF.to_tensor(image)[0, ...]
-
-    resized = TF.resize(image[None, ...], size=size)[0]
-    tensor_3_channels = torch.stack([resized, resized, resized], 0)
-    normalized = TF.normalize(tensor_3_channels, image_mean, image_std)
-    return normalized
 
 
 def _crop_and_straigthen(image: Image, corners: list[tuple[int, int]]):
@@ -67,7 +49,7 @@ def _invert_image(image):
     return 255 - _normalize(image)
 
 
-def _input_to_individual_and_processed_images(
+def input_to_individual_and_processed_images(
     original_image: Image, points: list[tuple[int, int]], percentage_space: float
 ) -> tuple[Image.Image, list[np.ndarray]]:
     area_of_interest = _crop_and_straigthen(original_image, points)
@@ -82,27 +64,3 @@ def _input_to_individual_and_processed_images(
 
     digit_arrays = [np.array(d) for d in gray_digits]
     return area_of_interest, [_invert_image(p) for p in digit_arrays]
-
-
-def _predict(images, model_name: Path) -> list[int]:
-    model = AutoModelForImageClassification.from_pretrained(str(model_name))
-    predictions = []
-    for d in images:
-        d_color = np.repeat(d[..., np.newaxis], 3, axis=2)
-        d_pil = Image.fromarray(d_color)
-        inputs = image_to_inputs(d_pil)
-        with torch.no_grad():
-            logits = model(inputs[None, ...]).logits
-        predicted_label = logits.argmax(-1).item()
-        predictions.append(predicted_label)
-    return predictions
-
-
-def to_individual_digits(image: Image, settings: DigitRecognitionSettings) -> list[int]:
-    _, digit_arrays = _input_to_individual_and_processed_images(
-        image,
-        list(settings.corner_points),
-        percentage_space=settings.gap_between_digits_percentage,
-    )
-
-    return _predict(digit_arrays, settings.model_location)

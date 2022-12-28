@@ -1,8 +1,11 @@
+import dataclasses
+
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button, PolygonSelector, Slider
 from PIL import Image
 
-from stadswarmte_sensor import app_settings, image_to_digits
+from stadswarmte_sensor import (app_settings, image_to_digits,
+                                segment_recognition)
 
 
 def plot(
@@ -30,7 +33,12 @@ def plot_results(
 
     row_cropped = ["cropped"] * 7
     row_digits = list("0123456")
-    row_button = ["button", "button"] + ["nothing", "nothing"] + ["slider"] * 3
+
+    row_button = (
+        ["button", "button"]
+        + ["stripe_width", "stripe_height", "middle_gap"]
+        + ["nothing"] * 2
+    )
 
     all_axis = [
         row_original,
@@ -54,12 +62,30 @@ def plot_results(
     selector.verts = vertices_order
     bprev = Button(ax_dict["button"], "REPREDICT")
 
-    freq_slider = Slider(
-        ax=ax_dict["slider"],
-        label="Percentage gap",
-        valmin=0.0,
-        valmax=1.0,
-        valinit=settings.gap_between_digits_percentage,
+    stripe_height_slider = Slider(
+        ax=ax_dict["stripe_height"],
+        label="stripe_height",
+        valstep=0.05,
+        valmin=0,
+        valmax=0.5,
+        valinit=settings.stripe_height_percentage,
+    )
+    stripe_width_slider = Slider(
+        ax=ax_dict["stripe_width"],
+        label="stripe_width",
+        valstep=0.05,
+        valmin=0,
+        valmax=0.5,
+        valinit=settings.stripe_width_percentage,
+    )
+
+    middle_gap_slider = Slider(
+        ax=ax_dict["middle_gap"],
+        label="middle_gap",
+        valstep=0.05,
+        valmin=0,
+        valmax=0.5,
+        valinit=settings.gap_middle_percentage,
     )
 
     def repredict(event):
@@ -69,21 +95,34 @@ def plot_results(
         (
             area_of_interest,
             digit_arrays,
-        ) = image_to_digits._input_to_individual_and_processed_images(
-            original_image, points_right_order, percentage_space=freq_slider.val
+        ) = image_to_digits.input_to_individual_and_processed_images(
+            original_image,
+            points_right_order,
+            percentage_space=settings.gap_between_digits_percentage,
         )
-        predictions = image_to_digits._predict(digit_arrays, settings.model_location)
+
+        updated_settings = dataclasses.replace(
+            settings,
+            stripe_width_percentage=stripe_width_slider.val,
+            stripe_height_percentage=stripe_height_slider.val,
+            gap_middle_percentage=middle_gap_slider.val,
+        )
+
+        processed = segment_recognition.pre_process_digit_images(
+            digit_arrays, updated_settings
+        )
+        predictions = segment_recognition.predict(processed, updated_settings)
         plot(
             ax_dict,
             original_image,
             area_of_interest,
             predictions,
-            digit_arrays,
+            processed,
             row_digits,
         )
         print("Done :)")
         print(
-            f"Corner points = {points_right_order}\ngap_between_digits_percentage={freq_slider.val}"
+            f"Corner points = {points_right_order}\nstripe_height={stripe_height_slider.val}\nstripe_width={stripe_width_slider.val}\nmiddle_hap={middle_gap_slider.val}"
         )
 
     bprev.on_clicked(repredict)
@@ -93,7 +132,7 @@ def plot_results(
 
 
 def main():
-    original_image = Image.open("2022_12_26_13_20_25__no_prediction.jpg")
+    original_image = Image.open("ground_truth/2022_12_26_16_42_26__gt_0335894.jpg")
     plot_results(original_image, app_settings.DigitRecognitionSettings())
 
 

@@ -10,22 +10,25 @@ class CameraSettings:
 
 @dataclass(frozen=True)
 class DigitRecognitionSettings:
-    gap_between_digits_percentage: float = 0.01
+    top: int = 2
+    bottom: int = 3
+    right: int = 3
+    left: int = 7
+
     corner_points: tuple[tuple[int, int], ...] = (
-        (501, 1440),
-        (491, 1655),
-        (1518, 1695),
-        (1537, 1492),
+        (517, 1461),
+        (474, 1696),
+        (1547, 1764),
+        (1567, 1523),
     )
 
-    model_location: Path = Path("~/models/vit-base-mnist-regular").expanduser()
+    gap_between_digits_percentage: float = 0.00
+    stripe_height_percentage: float = 0.17
+    stripe_width_percentage: float = 0.25
+    gap_middle_percentage: float = 0.10
 
     def __post_init__(self):
         assert len(self.corner_points) == 4, "There should be 4 corner locations"
-        assert (
-            0 <= self.gap_between_digits_percentage <= 1
-        ), "The gap should be between 0 and 1"
-        assert self.model_location.exists(), "The Model should actually exists"
 
 
 @dataclass(frozen=True)
