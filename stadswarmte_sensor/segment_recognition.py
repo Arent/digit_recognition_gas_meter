@@ -53,16 +53,14 @@ def normalize(image: np.ndarray) -> np.ndarray:
 
 
 def normalize_and_crop(digit_image: np.ndarray, settings: Settings) -> np.ndarray:
-    normalized = normalize(digit_image)
 
-    height, width = normalized.shape
+    height, width = digit_image.shape
     # This works quite well, maybe not for the first image, but that will be zero for a long time anyway
     # We don't really need this 28 by 28 images. This is due to the legacy deep learning solution.
-    cropped = normalized[
+    cropped = digit_image[
         settings.top : height - settings.bottom, settings.left : width - settings.right
     ]
-
-    return cropped
+    return   normalize(cropped)
 
 
 def turn_all_axis_off(ax_dict, labels):
@@ -123,7 +121,7 @@ def predict(original_image: Image, settings: Settings = Settings()) -> list[int]
 def main():
 
     original_image = Image.open(
-        "ground_truth/2022_12_27_07_43_26__gt_0335959.jpg"
+        "ground_truth/2022_12_28_08_45_05__gt_0336139.jpg"
     )
     # original_image = Image.open("ground_truth/2022_12_27_06_43_22__gt_0335948.jpg")
     all_axis = [

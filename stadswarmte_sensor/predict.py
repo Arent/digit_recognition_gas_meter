@@ -23,7 +23,7 @@ def _score_file(file: str) -> int:
 def score():
 
     files = [file for file in Path('ground_truth').iterdir() if str(file).endswith("jpg") ]
-
+    
     all_predictions = []
     all_labels = []
     file_correct = []
@@ -32,7 +32,7 @@ def score():
         file_correct.append(prediction == label)
         all_predictions.extend(prediction)
         all_labels.extend(label)
-
+    
     file_acc =  np.array(file_correct).mean()
     digit_acc = (np.array(all_predictions) == np.array(all_labels)).mean()
     print(f"Overal file accuracy {file_acc:.3f}")
@@ -60,7 +60,6 @@ def predict_nn(original_image):
 def main():
     
     Path("predictions").mkdir(exist_ok=True)
-    Path("predictions_nn").mkdir(exist_ok=True)
     Path("ground_truth").mkdir(exist_ok=True)
     
     
@@ -71,22 +70,16 @@ def main():
 
         predictions = segment_recognition.predict(original_image)
 
-        predictions_nn = predict_nn(original_image)
-
-
         digits_string = "__pred_" + "".join([str(d) for d in predictions])
         prediction_name = file.name.replace("__no_prediction", digits_string)
 
-        digits_string_nn = "__pred_" + "".join([str(d) for d in predictions_nn])
-        prediction_nn_name = file.name.replace("__no_prediction", digits_string_nn)
 
-        gt_nn = "__gt_" + "".join([str(d) for d in predictions_nn])
+        gt_nn = "__gt_" + "".join([str(d) for d in predictions])
         gt_nn_name = file.name.replace("__no_prediction", gt_nn)
 
         
         original_image.save(Path("predictions") / prediction_name)
 
-        original_image.save(Path("predictions_nn") / prediction_nn_name)
         original_image.save(Path("ground_truth") / gt_nn_name)
 
 
