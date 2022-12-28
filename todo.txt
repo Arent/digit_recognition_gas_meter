@@ -6,3 +6,5 @@
 - The calibrate module is ugly, though who cares.
 - The verify quality module is quite ugly too, again I don't care much about it.
 - I need to properly install dependencies. 
+- I need to run mypy, the types are a lie now!
+- I need some cicd maybe. or maybe not
