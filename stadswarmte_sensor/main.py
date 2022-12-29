@@ -7,14 +7,6 @@ from PIL import Image
 from stadswarmte_sensor import app_settings, camera, mqqt, segment_recognition
 
 
-def log_to_disk(
-    image: Image.Image, digits: list[int], timestamp: str, base_path: Path
-) -> None:
-    digits_string = "".join([str(d) for d in digits])
-    name = f"{timestamp}__{digits_string}.jpg"
-    image.save(base_path / name)
-
-
 def capture_recognise_and_publish(settings: app_settings.AppSettings):
     """This funcion captures an image, recognizes the individual digits
     and publishes a message on a MQQT topic.
@@ -31,7 +23,6 @@ def capture_recognise_and_publish(settings: app_settings.AppSettings):
     digits = segment_recognition.process_and_predict(
         image, settings.digit_recognition_settings
     )
-    log_to_disk(image, digits, timestamp, settings.images_folder)
     mqqt.publish_message(digits, timestamp, settings.mqqt_settings)
 
 
