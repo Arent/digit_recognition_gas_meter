@@ -40,7 +40,7 @@ class MQTTSettings:
 
 @dataclass(frozen=True)
 class AppSettings:
-    time_between_measurements: int = 3600
+    time_between_measurements: int = 900
     images_folder: Path = Path("/home/pi/meterkast_images")
     camera_settings: CameraSettings = CameraSettings()
     digit_recognition_settings: DigitRecognitionSettings = DigitRecognitionSettings()
