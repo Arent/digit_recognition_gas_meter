@@ -12,7 +12,7 @@ def log_to_disk(
     image: Image.Image, digits: list[int], timestamp: str, base_path: Path
 ) -> None:
     digits_string = "".join([str(d) for d in digits])
-    name = f"{timestamp}__{digits_string}.png"
+    name = f"{timestamp}__{digits_string}.jpg"
     image.save(base_path / name)
 
 
@@ -26,7 +26,7 @@ def capture_recognise_and_publish(settings: app_settings.AppSettings):
 
     timestamp = datetime.datetime.utcnow().strftime("%Y_%m_%d_%H_%M_%S")
 
-    name = f"{settings.images_folder}/{timestamp}__no_prediction.png"
+    name = f"{settings.images_folder}/{timestamp}__no_prediction.jpg"
 
     image = camera.capture_image(settings.camera_settings, name)
     digits = segment_recognition.process_and_predict(
