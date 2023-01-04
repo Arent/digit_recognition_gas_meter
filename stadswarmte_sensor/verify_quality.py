@@ -9,7 +9,11 @@ from stadswarmte_sensor import app_settings, segment_recognition
 
 
 def labels_from_name(file: str) -> list[int]:
-    nrs = file.name.split("__gt_")[1].split(".jpg")[0]
+    if "gt" not in file:
+        nrs = file.split("__")[1].split(".")[0]
+    else:
+        nrs = file.split("__gt_")[1].split(".")[0]
+
     return list(map(int, list(nrs)))
 
 
@@ -18,16 +22,15 @@ def _score_file(file: str) -> int:
     prediction = segment_recognition.process_and_predict(
         image, app_settings.DigitRecognitionSettings()
     )
-    labels = labels_from_name(file)
-
+    labels = labels_from_name(str(file))
+    print(labels)
     return prediction, labels
 
 
 def score():
 
-    files = [
-        file for file in Path("ground_truth").iterdir() if str(file).endswith("jpg")
-    ]
+    files = [file for file in Path("meterkast_images").iterdir() if file.is_file()]
+    files += [file for file in Path("ground_truth").iterdir() if file.is_file()]
 
     all_predictions = []
     all_labels = []
@@ -37,7 +40,6 @@ def score():
         file_correct.append(prediction == label)
         all_predictions.extend(prediction)
         all_labels.extend(label)
-
     file_acc = np.array(file_correct).mean()
     digit_acc = (np.array(all_predictions) == np.array(all_labels)).mean()
     print(f"Overal file accuracy {file_acc:.3f}")

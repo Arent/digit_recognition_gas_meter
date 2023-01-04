@@ -132,7 +132,19 @@ def plot_results(
 
 
 def main():
-    original_image = Image.open("ground_truth/2022_12_26_16_42_26__gt_0335894.jpg")
+    # meterkast_images/2022_12_31_19_55_07__0736520.png
+
+    # meterkast_images/2023_01_04_11_05_42__0336747.jpg
+    # meterkast_images/2023_01_04_09_05_08__0336744.jpg
+    # meterkast_images/2023_01_04_14_06_32__0336751.jpg
+
+    # meterkast_images/2022_12_31_02_08_25__0336463.png
+    # meterkast_images/2022_12_31_01_37_56__0336463.png
+    # ground_truth/2022_12_26_23_42_54__gt_0335923.jpg
+    # ground_truth/2022_12_27_00_42_58__gt_0335923.jpg
+
+    original_image = Image.open("meterkast_images/2022_12_31_01_37_56__0336463.png")
+
     plot_results(original_image, app_settings.DigitRecognitionSettings())
 
 
