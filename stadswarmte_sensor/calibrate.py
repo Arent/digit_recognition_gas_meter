@@ -143,7 +143,7 @@ def main():
     # ground_truth/2022_12_26_23_42_54__gt_0335923.jpg
     # ground_truth/2022_12_27_00_42_58__gt_0335923.jpg
 
-    original_image = Image.open("meterkast_images/2022_12_31_01_37_56__0336463.png")
+    original_image = Image.open("meterkast_images/2023_03_31_16_17_12__no_prediction.jpg")
 
     plot_results(original_image, app_settings.DigitRecognitionSettings())
 

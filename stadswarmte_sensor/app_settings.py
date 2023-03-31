@@ -16,10 +16,7 @@ class DigitRecognitionSettings:
     left: int = 7
 
     corner_points: tuple[tuple[int, int], ...] = (
-        (517, 1461),
-        (474, 1696),
-        (1547, 1764),
-        (1567, 1523),
+        (788, 1283), (750, 1500), (1709, 1627), (1744, 1400)
     )
 
     gap_between_digits_percentage: float = 0.00
